@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curieus — Service Introduction</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --blue: #1976D2;
+    --blue-light: #42A5F5;
+    --blue-glow: rgba(33, 150, 243, 0.3);
+    --dark: #0a0e27;
+    --darker: #060918;
+    --white: #ffffff;
+    --gray: #8892b0;
+    --text: #ccd6f6;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--darker);
+    color: var(--white);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+  .scene.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ===== SCREENSHOT OVERLAY ===== */
+  .scene-screenshot {
+    position: absolute;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+    opacity: 0;
+    transform: scale(0.92) translateY(15px);
+    transition: opacity 1s ease, transform 1s ease;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .scene-screenshot.visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  /* Fade graphics when screenshot is showing */
+  .scene.graphics-dim .act-label,
+  .scene.graphics-dim .counter-section,
+  .scene.graphics-dim .bubble-map,
+  .scene.graphics-dim .filter-msg,
+  .scene.graphics-dim .pipeline-canvas,
+  .scene.graphics-dim .orch-msg,
+  .scene.graphics-dim .auto-layout {
+    opacity: 0.15 !important;
+    transition: opacity 0.8s ease !important;
+  }
+  .scene-screenshot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* Positions per act */
+  #act1 .scene-screenshot {
+    width: 780px;
+    height: auto;
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+  }
+  #act1 .scene-screenshot.visible {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  #act1 .scene-screenshot.fade-back {
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  #act1 .scene-screenshot {
+    transform: translate(-50%, -50%) scale(0.92) translateY(15px);
+  }
+
+  #act2 .scene-screenshot {
+    width: 780px;
+    height: auto;
+    top: 50%;
+    left: 50%;
+  }
+  #act2 .scene-screenshot.visible {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  #act2 .scene-screenshot.fade-back {
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  #act2 .scene-screenshot {
+    transform: translate(-50%, -50%) scale(0.92) translateY(15px);
+  }
+
+  #act3 .scene-screenshot {
+    width: 780px;
+    height: auto;
+    top: 50%;
+    left: 50%;
+  }
+  #act3 .scene-screenshot.visible {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  #act3 .scene-screenshot.fade-back {
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  #act3 .scene-screenshot {
+    transform: translate(-50%, -50%) scale(0.92) translateY(15px);
+  }
+
+  /* Content overlay sits above faded screenshot */
+  .scene-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== INTRO ===== */
+  #intro {
+    flex-direction: column;
+    gap: 16px;
+    background: radial-gradient(ellipse at center, #0d1435 0%, var(--darker) 70%);
+  }
+  #intro .logo {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: logoIn 1.2s ease-out 0.3s forwards;
+  }
+  #intro .logo img {
+    height: 52px;
+    width: auto;
+  }
+  #intro .subtitle {
+    font-size: 18px;
+    color: var(--gray);
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.8s ease-out 1s forwards;
+  }
+  #intro .glow-ring {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    border: 1px solid rgba(33,150,243,0.15);
+    animation: pulseRing 3s ease-in-out infinite;
+  }
+  #intro .glow-ring:nth-child(2) { width: 450px; height: 450px; animation-delay: 0.5s; }
+  #intro .glow-ring:nth-child(3) { width: 600px; height: 600px; animation-delay: 1s; }
+
+  /* ===== ACT 1: CURATE ===== */
+  #act1 {
+    flex-direction: column;
+    background: radial-gradient(ellipse at 30% 50%, #0d1a3a 0%, var(--darker) 60%);
+  }
+  .act-label {
+    position: absolute;
+    top: 60px;
+    left: 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+  }
+  .act-label .step {
+    background: var(--blue);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+  .act-label .title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .counter-section {
+    text-align: center;
+    margin-bottom: 30px;
+    opacity: 0;
+  }
+  .counter-number {
+    font-size: 160px;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--blue-light), #64B5F6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .counter-label {
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--text);
+    margin-top: 10px;
+  }
+  .counter-sub {
+    font-size: 17px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  /* Bubble Map */
+  .bubble-map {
+    position: relative;
+    width: 1000px;
+    height: 440px;
+    opacity: 0;
+  }
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: white;
+    opacity: 0;
+    transform: scale(0);
+    cursor: default;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .bubble:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 0 0 20px var(--blue-glow);
+  }
+  .bubble.cat-structure { background: rgba(92,107,192,0.75); }
+  .bubble.cat-docking { background: rgba(38,166,154,0.75); }
+  .bubble.cat-seqdesign { background: rgba(126,87,194,0.75); }
+  .bubble.cat-dynamics { background: rgba(239,83,80,0.7); }
+  .bubble.cat-prediction { background: rgba(255,112,67,0.7); }
+  .bubble.cat-interaction { background: rgba(66,165,245,0.75); }
+  .bubble.cat-genomics { background: rgba(102,187,106,0.75); }
+  .bubble.cat-antibody { background: rgba(171,71,188,0.7); }
+  .bubble.cat-maturation { background: rgba(121,85,72,0.75); }
+  .bubble.cat-smallmol { background: rgba(239,108,107,0.7); }
+  .bubble.cat-safety { background: rgba(255,138,101,0.7); }
+  .bubble.cat-utility { background: rgba(120,144,156,0.7); }
+
+  .cluster-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    opacity: 0;
+  }
+
+  .filter-msg {
+    position: absolute;
+    bottom: 50px;
+    font-size: 16px;
+    color: var(--text);
+    opacity: 0;
+    font-weight: 300;
+  }
+  .filter-msg em {
+    color: var(--blue-light);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* ===== ACT 2: ORCHESTRATE ===== */
+  #act2 {
+    flex-direction: column;
+    background: radial-gradient(ellipse at 60% 40%, #0d1a3a 0%, var(--darker) 60%);
+  }
+
+  .pipeline-canvas {
+    position: relative;
+    width: 1200px;
+    height: 620px;
+  }
+
+  .pipeline-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .pipeline-svg .edge-path {
+    fill: none;
+    stroke: rgba(255,255,255,0.08);
+    stroke-width: 1.5;
+  }
+  .pipeline-svg .edge-path-glow {
+    fill: none;
+    stroke: var(--blue-light);
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px var(--blue-glow));
+  }
+  .pipeline-svg .edge-path-soft {
+    fill: none;
+    stroke: rgba(66,165,245,0.25);
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0;
+    filter: blur(2px);
+  }
+  .pipeline-svg .flow-dot {
+    fill: var(--blue-light);
+    opacity: 0;
+    filter: drop-shadow(0 0 6px var(--blue-light));
+  }
+
+  .pipeline-node {
+    position: absolute;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+  }
+  .pipeline-node.small {
+    padding: 8px 12px;
+  }
+  .pipeline-node .node-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .pipeline-node .node-type {
+    font-size: 10px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
+  }
+  .pipeline-node .node-tags {
+    display: flex;
+    gap: 3px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .pipeline-node .node-tags span {
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(33,150,243,0.15);
+    color: var(--blue-light);
+  }
+  .pipeline-node.active-node {
+    border-color: var(--blue-light);
+    box-shadow: 0 0 25px var(--blue-glow), inset 0 0 15px rgba(33,150,243,0.05);
+    background: rgba(33,150,243,0.08);
+  }
+  .pipeline-node.done-node {
+    border-color: #4CAF50;
+    box-shadow: 0 0 15px rgba(76,175,80,0.2);
+  }
+  .pipeline-node.abdev-node {
+    background: rgba(206,147,216,0.1);
+    border-color: rgba(206,147,216,0.3);
+  }
+  .pipeline-node.abdev-node.active-node {
+    border-color: #CE93D8;
+    box-shadow: 0 0 25px rgba(206,147,216,0.3);
+    background: rgba(206,147,216,0.15);
+  }
+  .pipeline-node.abdev-node.done-node {
+    border-color: #4CAF50;
+    box-shadow: 0 0 15px rgba(76,175,80,0.2);
+  }
+  .pipeline-node .node-status {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 12px;
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .pipeline-node .node-status.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .pipeline-node .conn-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  .pipeline-node .conn-dot.right {
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .pipeline-node .conn-dot.left {
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .pipeline-node .conn-dot.active {
+    background: var(--blue-light);
+    border-color: var(--blue-light);
+    box-shadow: 0 0 8px var(--blue-glow);
+  }
+
+  .run-btn {
+    position: absolute;
+    bottom: -50px;
+    right: 0;
+    background: linear-gradient(135deg, #1565C0, var(--blue-light));
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(10px);
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(33,150,243,0.3);
+    transition: transform 0.15s ease, opacity 0.5s ease;
+  }
+
+  .orch-msg {
+    position: absolute;
+    bottom: 20px;
+    left: 60px;
+    font-size: 16px;
+    color: var(--text);
+    opacity: 0;
+    font-weight: 300;
+    transition: opacity 0.8s ease;
+  }
+  .orch-msg em {
+    color: var(--blue-light);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* ===== ACT 3: AUTOMATE ===== */
+  #act3 {
+    background: radial-gradient(ellipse at 70% 60%, #0d1a3a 0%, var(--darker) 60%);
+  }
+
+  .auto-layout {
+    display: flex;
+    gap: 36px;
+    align-items: flex-start;
+    width: 1040px;
+    height: 560px;
+  }
+
+  .sequence-panel {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 30px;
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  .sequence-panel h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .sequence-panel p {
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 16px;
+  }
+  .sequence-box {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 60px;
+    overflow: hidden;
+  }
+  .sequence-box .cursor-blink {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--blue-light);
+    animation: blink 0.8s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+
+  .param-fields {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .param-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .param-field label {
+    font-size: 12px;
+    color: var(--gray);
+    width: 100px;
+  }
+  .param-field .field-val {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text);
+    min-height: 18px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .param-field .field-val.glow {
+    border-color: var(--blue-light);
+    box-shadow: 0 0 10px var(--blue-glow);
+  }
+
+  .structure-preview {
+    width: 100%;
+    height: 150px;
+    margin-top: 20px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .protein-3d {
+    opacity: 0;
+    transform: scale(0.5) rotateY(-30deg);
+    transition: all 1.2s ease-out;
+  }
+  .protein-3d.visible {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+  .helix {
+    position: relative;
+    width: 120px;
+    height: 100px;
+  }
+  .helix-strand {
+    position: absolute;
+    width: 80px;
+    height: 3px;
+    border-radius: 2px;
+    transform-origin: left center;
+  }
+
+  /* Chat Panel */
+  .chat-panel {
+    width: 400px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+    display: flex;
+    flex-direction: column;
+    max-height: 480px;
+  }
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chat-header .ai-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), var(--blue-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .chat-header span {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .chat-body {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .chat-msg {
+    max-width: 90%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .chat-msg.user {
+    align-self: flex-end;
+    background: var(--blue);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-msg.ai {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+  .chat-msg .typing-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .chat-msg .typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gray);
+    animation: dotBounce 1.2s ease-in-out infinite;
+  }
+  .chat-msg .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .chat-msg .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  .chat-input {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-input input {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 8px 16px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+  .chat-input button {
+    background: var(--blue);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  /* ===== OUTRO ===== */
+  #outro {
+    flex-direction: column;
+    gap: 60px;
+    background: radial-gradient(ellipse at center, #0d1a3a 0%, var(--darker) 70%);
+  }
+  .steps-summary {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    transform: scale(1);
+    transition: transform 1s ease, opacity 1s ease;
+  }
+  .steps-summary.shrink {
+    transform: scale(0.75) translateY(-30px);
+    opacity: 0.7;
+  }
+  .step-card {
+    text-align: center;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  .step-card .icon-circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(33,150,243,0.1);
+    border: 2px solid var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    transition: box-shadow 0.6s ease;
+  }
+  .step-card .icon-circle.glow {
+    box-shadow: 0 0 30px var(--blue-glow), 0 0 60px rgba(33,150,243,0.1);
+  }
+  .step-card .icon-circle svg {
+    width: 42px;
+    height: 42px;
+    fill: var(--blue-light);
+  }
+  .step-card h4 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .step-card p {
+    font-size: 14px;
+    color: var(--gray);
+    font-weight: 300;
+  }
+  .step-arrow {
+    color: var(--blue-light);
+    margin: 0 36px;
+    opacity: 0;
+    padding-bottom: 50px;
+    display: flex;
+    align-items: center;
+  }
+  .step-arrow svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .outro-logo {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  .outro-logo.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .outro-logo img {
+    height: 56px;
+    width: auto;
+  }
+  .outro-cta {
+    font-size: 16px;
+    color: var(--gray);
+    font-weight: 300;
+    opacity: 0;
+    margin-top: -30px;
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--blue-light));
+    width: 0%;
+    z-index: 100;
+    transition: width 0.3s linear;
+  }
+
+  /* ===== CONTROLS (hidden) ===== */
+  .controls {
+    display: none;
+  }
+
+  /* Click overlay for play/pause */
+  .click-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 30px;
+    z-index: 50;
+    cursor: pointer;
+  }
+
+  /* Pause indicator */
+  .pause-indicator {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 60px; height: 60px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.3s ease;
+    opacity: 0;
+  }
+  .pause-indicator.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  .pause-indicator svg { width: 24px; height: 24px; fill: white; }
+
+  /* Progress bar track (draggable) */
+  .progress-track {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 16px;
+    z-index: 101;
+    cursor: pointer;
+    background: transparent;
+  }
+  .progress-track:hover .progress-bar {
+    height: 5px;
+  }
+
+  /* Scene indicator */
+  .scene-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 6px;
+    z-index: 100;
+  }
+  .scene-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .scene-dot.active {
+    background: var(--blue-light);
+    transform: scale(1.3);
+  }
+
+  /* ===== KEYFRAMES ===== */
+  @keyframes logoIn {
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulseRing {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.1; transform: scale(1.05); }
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  @keyframes dotBounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-6px); }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes helixRotate {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Click overlay for play/pause toggle -->
+<div class="click-overlay" id="clickOverlay"></div>
+
+<!-- Pause indicator -->
+<div class="pause-indicator" id="pauseIndicator">
+  <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+</div>
+
+<!-- Progress bar with draggable track -->
+<div class="progress-track" id="progressTrack">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<!-- Scene indicators -->
+<div class="scene-indicator" id="sceneIndicator">
+  <div class="scene-dot active" data-scene="0"></div>
+  <div class="scene-dot" data-scene="1"></div>
+  <div class="scene-dot" data-scene="2"></div>
+  <div class="scene-dot" data-scene="3"></div>
+  <div class="scene-dot" data-scene="4"></div>
+</div>
+
+<!-- ===== INTRO ===== -->
+<div class="scene active" id="intro">
+  <div class="glow-ring"></div>
+  <div class="glow-ring"></div>
+  <div class="glow-ring"></div>
+  <div class="logo"><img src="./CurieusLogo-white.png" alt="Curieus"></div>
+  <div class="subtitle">AI-Powered Drug Discovery Platform</div>
+</div>
+
+<!-- ===== ACT 1: CURATE ===== -->
+<div class="scene" id="act1">
+  <div class="scene-screenshot" id="ss1"><img src="./ss-curate.png" alt="Curate"></div>
+  <div class="act-label" id="act1Label">
+    <span class="step">01</span>
+    <span class="title">Curate</span>
+  </div>
+  <div class="counter-section" id="counterSection">
+    <div class="counter-number" id="counterNum">0+</div>
+    <div class="counter-label">Best-in-Class AI Models</div>
+    <div class="counter-sub">Pre-configured. Always up to date.</div>
+  </div>
+  <div class="bubble-map" id="bubbleMap"></div>
+  <div class="filter-msg" id="filterMsg">
+    Curate the <em>best models</em> for every step of your discovery.
+  </div>
+</div>
+
+<!-- ===== ACT 2: ORCHESTRATE ===== -->
+<div class="scene" id="act2">
+  <div class="scene-screenshot" id="ss2"><img src="./ss-orchestrate.png" alt="Orchestrate"></div>
+  <div class="act-label" id="act2Label">
+    <span class="step">02</span>
+    <span class="title">Orchestrate</span>
+  </div>
+  <div class="pipeline-canvas" id="pipelineCanvas">
+    <svg class="pipeline-svg" id="pipelineSvg"></svg>
+    <!-- Nodes injected by JS -->
+  </div>
+  <div class="orch-msg" id="orchMsg">
+    <em>One click</em> to run the full analysis.
+  </div>
+</div>
+
+<!-- ===== ACT 3: AUTOMATE ===== -->
+<div class="scene" id="act3">
+  <div class="scene-screenshot" id="ss3"><img src="./ss-automate.png" alt="Automate"></div>
+  <div class="act-label" id="act3Label">
+    <span class="step">03</span>
+    <span class="title">Automate</span>
+  </div>
+  <div class="auto-layout">
+    <div class="sequence-panel" id="seqPanel">
+      <h3>BioEMU</h3>
+      <p>Input the amino acid sequence to analyze.</p>
+      <div class="sequence-box" id="seqBox">
+        <span id="seqText"></span><span class="cursor-blink"></span>
+      </div>
+      <div class="param-fields" id="paramFields">
+        <div class="param-field">
+          <label>Model</label>
+          <div class="field-val" id="field1"></div>
+        </div>
+        <div class="param-field">
+          <label>Samples</label>
+          <div class="field-val" id="field2"></div>
+        </div>
+        <div class="param-field">
+          <label>Temperature</label>
+          <div class="field-val" id="field3"></div>
+        </div>
+      </div>
+      <div class="structure-preview">
+        <div class="protein-3d" id="protein3d">
+          <svg width="160" height="120" viewBox="0 0 160 120">
+            <defs>
+              <linearGradient id="helixGrad" x1="0%" y1="0%" x2="100%">
+                <stop offset="0%" style="stop-color:#42A5F5;stop-opacity:0.8"/>
+                <stop offset="100%" style="stop-color:#1976D2;stop-opacity:0.6"/>
+              </linearGradient>
+            </defs>
+            <!-- Stylized helix -->
+            <path d="M20,60 C40,20 60,100 80,60 C100,20 120,100 140,60" stroke="url(#helixGrad)" stroke-width="3" fill="none" opacity="0.8"/>
+            <path d="M20,65 C40,25 60,105 80,65 C100,25 120,105 140,65" stroke="#64B5F6" stroke-width="2" fill="none" opacity="0.5"/>
+            <path d="M20,55 C40,15 60,95 80,55 C100,15 120,95 140,55" stroke="#90CAF9" stroke-width="1.5" fill="none" opacity="0.3"/>
+            <!-- Nodes -->
+            <circle cx="20" cy="60" r="4" fill="#42A5F5"/>
+            <circle cx="50" cy="40" r="3" fill="#64B5F6"/>
+            <circle cx="80" cy="60" r="5" fill="#1976D2"/>
+            <circle cx="110" cy="40" r="3" fill="#64B5F6"/>
+            <circle cx="140" cy="60" r="4" fill="#42A5F5"/>
+            <!-- Cross links -->
+            <line x1="35" y1="35" x2="35" y2="85" stroke="#42A5F5" stroke-width="1" opacity="0.3"/>
+            <line x1="65" y1="30" x2="65" y2="90" stroke="#42A5F5" stroke-width="1" opacity="0.3"/>
+            <line x1="95" y1="35" x2="95" y2="85" stroke="#42A5F5" stroke-width="1" opacity="0.3"/>
+            <line x1="125" y1="30" x2="125" y2="90" stroke="#42A5F5" stroke-width="1" opacity="0.3"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-panel" id="chatPanel">
+      <div class="chat-header">
+        <div class="ai-avatar">C</div>
+        <span>Curieus AI Agent</span>
+      </div>
+      <div class="chat-body" id="chatBody"></div>
+      <div class="chat-input">
+        <input type="text" placeholder="Ask about Curieus..." readonly>
+        <button>&#x27A4;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OUTRO ===== -->
+<div class="scene" id="outro">
+  <div class="steps-summary">
+    <div class="step-card" id="outStep1">
+      <div class="icon-circle">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </div>
+      <h4>Curate</h4>
+      <p>76+ Best Models</p>
+    </div>
+    <div class="step-arrow" id="outArrow1">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </div>
+    <div class="step-card" id="outStep2">
+      <div class="icon-circle">
+        <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+      </div>
+      <h4>Orchestrate</h4>
+      <p>Tailored Workflow</p>
+    </div>
+    <div class="step-arrow" id="outArrow2">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </div>
+    <div class="step-card" id="outStep3">
+      <div class="icon-circle">
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/><path d="M19 2l.9 2.1L22 5l-2.1.9L19 8l-.9-2.1L16 5l2.1-.9L19 2z" opacity="0.6"/><path d="M5 16l.7 1.3L7 18l-1.3.7L5 20l-.7-1.3L3 18l1.3-.7L5 16z" opacity="0.6"/></svg>
+      </div>
+      <h4>Automate</h4>
+      <p>AI Agent</p>
+    </div>
+  </div>
+  <div class="outro-logo" id="outroLogo"><img src="./CurieusLogo-white.png" alt="Curieus"></div>
+  <div class="outro-cta" id="outroCta">Start your discovery at curieus.net</div>
+</div>
+
+<!-- ===== CONTROLS ===== -->
+<div class="controls">
+  <button id="btnPlay" class="playing">&#x25B6; Play</button>
+  <button id="btnPause">&#x23F8; Pause</button>
+  <button id="btnRestart">&#x21BB; Restart</button>
+</div>
+
+<script>
+// ===== ANIMATION ENGINE =====
+const scenes = ['intro', 'act1', 'act2', 'act3', 'outro'];
+let currentScene = 0;
+let isPlaying = true;
+let timeline = null;
+
+function switchScene(index) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.scene-dot').forEach(d => d.classList.remove('active'));
+  document.getElementById(scenes[index]).classList.add('active');
+  document.querySelectorAll('.scene-dot')[index].classList.add('active');
+  currentScene = index;
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = (currentScene / (scenes.length - 1)) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+// Scene dot click
+document.querySelectorAll('.scene-dot').forEach(dot => {
+  dot.addEventListener('click', () => {
+    const idx = parseInt(dot.dataset.scene);
+    if (isPlaying) { clearTimeout(timeline); isPlaying = false; }
+    switchScene(idx);
+    runSceneAnimation(idx);
+  });
+});
+
+// ===== BUBBLE MAP DATA =====
+const bubbles = [
+  // GENOMICS (top-left)
+  { name: 'Scanpy', cat: 'genomics', x: 55, y: 48, s: 40 },
+  { name: 'CodonTransformer', cat: 'genomics', x: 100, y: 30, s: 38 },
+  { name: 'CrisprDesign', cat: 'genomics', x: 75, y: 90, s: 36 },
+
+  // INTERACTION ANALYSIS (top-center)
+  { name: 'Plip', cat: 'interaction', x: 310, y: 18, s: 36 },
+  { name: 'Dscript', cat: 'interaction', x: 270, y: 45, s: 34 },
+  { name: 'Prodigy', cat: 'interaction', x: 330, y: 60, s: 38 },
+  { name: 'ProAnalysis', cat: 'interaction', x: 290, y: 100, s: 42 },
+
+  // PROPERTY PREDICTION (top-right)
+  { name: 'Deepenzyme', cat: 'prediction', x: 750, y: 10, s: 36 },
+  { name: 'DLKcat', cat: 'prediction', x: 810, y: 18, s: 34 },
+  { name: 'DeepFRI', cat: 'prediction', x: 770, y: 50, s: 38 },
+  { name: 'NetSolP', cat: 'prediction', x: 830, y: 48, s: 32 },
+  { name: 'TemStaPro', cat: 'prediction', x: 750, y: 85, s: 34 },
+  { name: 'MHCflurry', cat: 'prediction', x: 850, y: 80, s: 36 },
+  { name: 'ADMET-AI', cat: 'prediction', x: 830, y: 115, s: 34 },
+  { name: 'ImmuScope', cat: 'prediction', x: 790, y: 120, s: 32 },
+
+  // STRUCTURE PREDICTION (center-left)
+  { name: 'BoltzGen', cat: 'structure', x: 170, y: 155, s: 38 },
+  { name: 'Boltz', cat: 'structure', x: 230, y: 140, s: 48 },
+  { name: 'RFantibody', cat: 'structure', x: 280, y: 170, s: 42 },
+  { name: 'RFdiffusion-v3', cat: 'structure', x: 220, y: 200, s: 40 },
+  { name: 'OpenFold3', cat: 'structure', x: 160, y: 215, s: 42 },
+  { name: 'ImmuneBuilder', cat: 'structure', x: 290, y: 220, s: 38 },
+  { name: 'Chai', cat: 'structure', x: 210, y: 250, s: 44 },
+
+  // MOLECULAR DOCKING (center)
+  { name: 'DiffDock', cat: 'docking', x: 490, y: 130, s: 50 },
+  { name: 'Prodock', cat: 'docking', x: 430, y: 145, s: 42 },
+  { name: 'DynamicBind', cat: 'docking', x: 530, y: 150, s: 44 },
+  { name: 'EquiBind', cat: 'docking', x: 460, y: 195, s: 40 },
+  { name: 'GNINA', cat: 'docking', x: 530, y: 205, s: 42 },
+
+  // ANTIBODY EVALUATION (far right)
+  { name: 'AbDev', cat: 'antibody', x: 870, y: 185, s: 42 },
+  { name: 'TAP', cat: 'antibody', x: 930, y: 175, s: 34 },
+  { name: 'SALSA', cat: 'antibody', x: 830, y: 220, s: 36 },
+  { name: 'DeepViscosity', cat: 'antibody', x: 900, y: 220, s: 38 },
+
+  // MATURATION (bottom-left)
+  { name: 'Evolver', cat: 'maturation', x: 100, y: 295, s: 48 },
+
+  // SEQUENCE DESIGN (bottom-center)
+  { name: 'ProteinMPNN', cat: 'seqdesign', x: 340, y: 300, s: 44 },
+  { name: 'PocketGen', cat: 'seqdesign', x: 400, y: 290, s: 38 },
+  { name: 'LigandMPNN', cat: 'seqdesign', x: 310, y: 340, s: 40 },
+  { name: 'Antifold', cat: 'seqdesign', x: 380, y: 340, s: 36 },
+  { name: 'ThermoMPNN', cat: 'seqdesign', x: 340, y: 378, s: 36 },
+
+  // MOLECULAR DYNAMICS (center-right bottom)
+  { name: 'Gromacs', cat: 'dynamics', x: 650, y: 260, s: 42 },
+  { name: 'PPM3', cat: 'dynamics', x: 710, y: 275, s: 36 },
+  { name: 'Bioemu', cat: 'dynamics', x: 640, y: 310, s: 44 },
+  { name: 'GromacsCharmGUI', cat: 'dynamics', x: 710, y: 330, s: 36 },
+
+  // SMALL MOLECULE (center-bottom)
+  { name: 'Lip', cat: 'smallmol', x: 530, y: 330, s: 46 },
+
+  // SAFETY & TOXICITY (far right bottom)
+  { name: 'hERG', cat: 'safety', x: 870, y: 310, s: 38 },
+  { name: 'Dilipred', cat: 'safety', x: 830, y: 345, s: 34 },
+  { name: 'StructToxNet', cat: 'safety', x: 810, y: 380, s: 36 },
+  { name: 'ToxinPred3', cat: 'safety', x: 880, y: 365, s: 34 },
+  { name: 'HemoPi2', cat: 'safety', x: 870, y: 400, s: 32 },
+
+  // UTILITY / ADAPTOR (bottom-left)
+  { name: 'RDKit', cat: 'utility', x: 120, y: 378, s: 36 },
+  { name: 'FixPDB', cat: 'utility', x: 155, y: 410, s: 34 },
+];
+
+const clusterLabels = [
+  { text: 'GENOMICS', x: 50, y: 8 },
+  { text: 'INTERACTION ANALYSIS', x: 240, y: 0 },
+  { text: 'PROPERTY PREDICTION', x: 740, y: -5 },
+  { text: 'STRUCTURE PREDICTION', x: 155, y: 125 },
+  { text: 'MOLECULAR DOCKING', x: 430, y: 105 },
+  { text: 'ANTIBODY EVALUATION', x: 830, y: 160 },
+  { text: 'MATURATION', x: 70, y: 270 },
+  { text: 'SEQUENCE DESIGN', x: 310, y: 270 },
+  { text: 'MOLECULAR DYNAMICS', x: 625, y: 240 },
+  { text: 'SMALL MOLECULE', x: 500, y: 305 },
+  { text: 'SAFETY & TOXICITY', x: 820, y: 285 },
+  { text: 'UTILITY / ADAPTOR', x: 85, y: 355 },
+];
+
+// Generate bubble map
+const mapEl = document.getElementById('bubbleMap');
+bubbles.forEach((b, i) => {
+  const div = document.createElement('div');
+  div.className = `bubble cat-${b.cat}`;
+  div.style.cssText = `left:${b.x}px;top:${b.y}px;width:${b.s}px;height:${b.s}px;transition-delay:${i*0.04}s`;
+  div.textContent = b.name;
+  div.dataset.index = i;
+  mapEl.appendChild(div);
+});
+clusterLabels.forEach(cl => {
+  const lbl = document.createElement('div');
+  lbl.className = 'cluster-label';
+  lbl.style.cssText = `left:${cl.x}px;top:${cl.y}px`;
+  lbl.textContent = cl.text;
+  mapEl.appendChild(lbl);
+});
+
+// ===== PIPELINE NODES (3-column layout matching screenshot) =====
+// Column 1: Left source nodes (small)
+// Column 2: Middle processing nodes
+// Column 3: Right output node (AbDev)
+const nodeW = { left: 160, mid: 185, right: 200 };
+const nodeH = { left: 70, mid: 80, right: 85 };
+const LEFT_COUNT = 4;
+const MID_COUNT = 3;
+const RIGHT_IDX = LEFT_COUNT + MID_COUNT; // index 7
+const pipelineNodes = [
+  // Left column (4 nodes) — gap = 140
+  { id: 'L0', name: 'Antifold', type: 'Sequence Design', tags: ['Protein','Antibody','PDB→PDB'], x: 20, y: 40, col: 'left' },
+  { id: 'L1', name: 'RFantibody', type: 'Structure Prediction', tags: ['Protein','Antibody','PDB→PDB'], x: 20, y: 180, col: 'left' },
+  { id: 'L2', name: 'ProteinMPNN', type: 'Sequence Design', tags: ['Protein','Antibody','PDB→PDB'], x: 20, y: 320, col: 'left' },
+  { id: 'L3', name: 'Evolver', type: 'Maturation', tags: ['Protein','Antibody','PDB→PDB'], x: 20, y: 460, col: 'left' },
+  // Middle column (3 nodes) — gap = 170
+  { id: 'M0', name: 'ImmuneBuilder', type: 'Structure Prediction', tags: ['Protein','Antibody','PDB→PDB'], x: 440, y: 80, col: 'mid' },
+  { id: 'M1', name: 'BioPhi', type: 'Antibody Evaluation', tags: ['Antibody','PDB→CSV'], x: 440, y: 250, col: 'mid' },
+  { id: 'M2', name: 'ImmuScope', type: 'Property Prediction', tags: ['Protein','Antibody','Score'], x: 440, y: 420, col: 'mid' },
+  // Right column (1 node - AbDev)
+  { id: 'R0', name: 'AbDev', type: 'Antibody Evaluation', tags: ['Antibody','PDB→CSV'], x: 900, y: 250, col: 'right' },
+];
+
+// Edge definitions: from → to (indices)
+const edgeDefs = [
+  // Left → Middle (fan pattern)
+  { from: 0, to: 4 }, { from: 0, to: 5 },
+  { from: 1, to: 4 }, { from: 1, to: 5 },
+  { from: 2, to: 5 }, { from: 2, to: 6 },
+  { from: 3, to: 5 }, { from: 3, to: 6 },
+  // Middle → Right (converge)
+  { from: 4, to: 7 },
+  { from: 5, to: 7 },
+  { from: 6, to: 7 },
+];
+
+const pipelineCanvas = document.getElementById('pipelineCanvas');
+const pipelineSvg = document.getElementById('pipelineSvg');
+
+// Create nodes
+pipelineNodes.forEach((n, i) => {
+  const div = document.createElement('div');
+  const isAbdev = n.col === 'right';
+  const isSmall = n.col === 'left';
+  div.className = `pipeline-node${isSmall ? ' small' : ''}${isAbdev ? ' abdev-node' : ''}`;
+  div.id = `pnode${i}`;
+  const w = nodeW[n.col];
+  div.style.cssText = `left:${n.x}px;top:${n.y}px;width:${w}px`;
+  div.innerHTML = `
+    <div class="node-name">${n.name}</div>
+    <div class="node-type">${n.type}</div>
+    <div class="node-tags">${n.tags.map(t => `<span>${t}</span>`).join('')}</div>
+    <div class="node-status"></div>
+    <div class="conn-dot right"></div>
+    ${n.col !== 'left' ? '<div class="conn-dot left"></div>' : ''}
+  `;
+  pipelineCanvas.appendChild(div);
+});
+
+// Create SVG edges after layout so we can measure actual node heights
+function buildEdges() {
+  // Clear existing
+  pipelineSvg.innerHTML = '';
+
+  edgeDefs.forEach((e, i) => {
+    const fromEl = document.getElementById(`pnode${e.from}`);
+    const toEl = document.getElementById(`pnode${e.to}`);
+    const fromDot = fromEl.querySelector('.conn-dot.right');
+    const toDot = toEl.querySelector('.conn-dot.left');
+
+    // Get actual dot positions relative to canvas
+    const fromRect = fromEl.getBoundingClientRect();
+    const toRect = toEl.getBoundingClientRect();
+    const canvasRect = pipelineCanvas.getBoundingClientRect();
+
+    // Right dot: right edge of from node, vertically centered
+    const sx = fromEl.offsetLeft + fromEl.offsetWidth;
+    const sy = fromEl.offsetTop + fromEl.offsetHeight / 2;
+    // Left dot: left edge of to node, vertically centered
+    const ex = toEl.offsetLeft;
+    const ey = toEl.offsetTop + toEl.offsetHeight / 2;
+
+    const cpOffset = (ex - sx) * 0.4;
+    const d = `M${sx},${sy} C${sx + cpOffset},${sy} ${ex - cpOffset},${ey} ${ex},${ey}`;
+
+    // Background path
+    const bgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    bgPath.setAttribute('d', d);
+    bgPath.setAttribute('class', 'edge-path');
+    bgPath.id = `edge-bg-${i}`;
+    bgPath.style.opacity = '0';
+    pipelineSvg.appendChild(bgPath);
+
+    // Soft glow layer (wider, blurred — drawn alongside glow)
+    const softPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    softPath.setAttribute('d', d);
+    softPath.setAttribute('class', 'edge-path-soft');
+    softPath.id = `edge-soft-${i}`;
+    pipelineSvg.appendChild(softPath);
+
+    // Glow path (animated draw)
+    const glowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    glowPath.setAttribute('d', d);
+    glowPath.setAttribute('class', 'edge-path-glow');
+    glowPath.id = `edge-glow-${i}`;
+    pipelineSvg.appendChild(glowPath);
+
+    // Flow dot
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('r', '3');
+    dot.setAttribute('class', 'flow-dot');
+    dot.id = `flow-dot-${i}`;
+    pipelineSvg.appendChild(dot);
+  });
+}
+// Build edges once nodes are laid out — we need them visible briefly
+// We'll rebuild on each act2 animation start instead
+
+
+// Run button
+const runBtn = document.createElement('button');
+runBtn.className = 'run-btn';
+runBtn.id = 'runBtn';
+runBtn.textContent = 'Run Pipeline  \u2192';
+pipelineCanvas.appendChild(runBtn);
+
+// Utility: animate SVG path draw with smooth ease
+function drawPath(pathEl, duration) {
+  return new Promise(resolve => {
+    const len = pathEl.getTotalLength();
+    pathEl.style.strokeDasharray = len;
+    pathEl.style.strokeDashoffset = len;
+    pathEl.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 400ms ease`;
+    pathEl.style.opacity = '0.7';
+    requestAnimationFrame(() => {
+      pathEl.style.strokeDashoffset = '0';
+    });
+    // Also fade in the soft glow sibling if exists
+    const softEl = document.getElementById(pathEl.id.replace('glow', 'soft'));
+    if (softEl) {
+      softEl.style.strokeDasharray = len;
+      softEl.style.strokeDashoffset = len;
+      softEl.style.transition = `stroke-dashoffset ${duration * 1.1}ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 500ms ease`;
+      softEl.style.opacity = '0.5';
+      requestAnimationFrame(() => { softEl.style.strokeDashoffset = '0'; });
+    }
+    setTimeout(resolve, duration);
+  });
+}
+
+// Utility: animate dot along path (smooth ease-in-out)
+function animateFlowDot(dotEl, pathEl, duration) {
+  return new Promise(resolve => {
+    const len = pathEl.getTotalLength();
+    const start = performance.now();
+    dotEl.style.opacity = '0';
+    function step(now) {
+      const t = Math.min((now - start) / duration, 1);
+      // Smooth ease-in-out
+      const eased = t < 0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+      // Fade in/out smoothly
+      const fade = t < 0.15 ? t / 0.15 : t > 0.85 ? (1 - t) / 0.15 : 1;
+      dotEl.style.opacity = String(Math.min(fade, 1));
+      const pt = pathEl.getPointAtLength(eased * len);
+      dotEl.setAttribute('cx', pt.x);
+      dotEl.setAttribute('cy', pt.y);
+      if (t < 1) requestAnimationFrame(step);
+      else { dotEl.style.opacity = '0'; resolve(); }
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+// Utility: turn completed edge green
+function turnEdgeGreen(i) {
+  const glow = document.getElementById(`edge-glow-${i}`);
+  const bg = document.getElementById(`edge-bg-${i}`);
+  const soft = document.getElementById(`edge-soft-${i}`);
+  if (glow) {
+    glow.style.transition = 'stroke 0.6s ease, filter 0.6s ease';
+    glow.style.stroke = '#4CAF50';
+    glow.style.filter = 'drop-shadow(0 0 6px rgba(76,175,80,0.4))';
+  }
+  if (bg) {
+    bg.style.transition = 'stroke 0.6s ease';
+    bg.style.stroke = 'rgba(76,175,80,0.2)';
+  }
+  if (soft) {
+    soft.style.transition = 'stroke 0.6s ease';
+    soft.style.stroke = 'rgba(76,175,80,0.3)';
+  }
+}
+
+// ===== ANIMATION SEQUENCES =====
+function animate(el, props, delay = 0) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      Object.assign(el.style, props);
+      const dur = parseFloat(props.transition?.split(' ')[0] || '0.6') * 1000;
+      setTimeout(resolve, dur);
+    }, delay);
+  });
+}
+
+function setStyle(el, props, delay = 0) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      Object.assign(el.style, props);
+      resolve();
+    }, delay);
+  });
+}
+
+// Counter animation
+function animateCounter(target, duration) {
+  const el = document.getElementById('counterNum');
+  // 0~60: 빠르게 올린 뒤, 60~76: 한 숫자씩 느리게
+  // 각 숫자의 딜레이를 점점 늘려서 ease-in 효과
+  const fastEnd = 60;
+  const fastDuration = duration * 0.15; // 0→60은 15%시간
+  const start = performance.now();
+
+  function fastPhase(now) {
+    const t = Math.min((now - start) / fastDuration, 1);
+    const val = Math.round(t * fastEnd);
+    el.textContent = val + '+';
+    if (t < 1) {
+      requestAnimationFrame(fastPhase);
+    } else {
+      // 느린 구간 시작: 60→76, 각 숫자 간격이 점점 길어짐
+      slowPhase(fastEnd);
+    }
+  }
+
+  function slowPhase(current) {
+    if (current >= target) {
+      el.textContent = target + '+';
+      return;
+    }
+    el.textContent = current + '+';
+    const remaining = target - fastEnd;     // 총 26스텝
+    const step = current - fastEnd;          // 현재 몇 번째
+    const progress = step / remaining;       // 0→1
+    // ease-in: 처음 빠르게 → 끝으로 갈수록 느리게
+    // 딜레이 = 기본 60ms에서 최대 350ms까지 가속
+    const baseDelay = 70;
+    const maxDelay = 280;
+    const delayMs = baseDelay + (maxDelay - baseDelay) * Math.pow(progress, 2.5);
+    setTimeout(() => slowPhase(current + 1), delayMs);
+  }
+
+  requestAnimationFrame(fastPhase);
+}
+
+// Typing animation
+function typeText(el, text, speed = 25) {
+  return new Promise(resolve => {
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        el.textContent += text[i];
+        i++;
+        setTimeout(type, speed);
+      } else {
+        resolve();
+      }
+    }
+    type();
+  });
+}
+
+// Chat message
+function addChatMsg(isUser, text, delay = 0) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const body = document.getElementById('chatBody');
+      const msg = document.createElement('div');
+      msg.className = `chat-msg ${isUser ? 'user' : 'ai'}`;
+      msg.textContent = text;
+      body.appendChild(msg);
+      requestAnimationFrame(() => {
+        msg.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        msg.style.opacity = '1';
+        msg.style.transform = 'translateY(0)';
+        body.scrollTop = body.scrollHeight;
+      });
+      setTimeout(resolve, 500);
+    }, delay);
+  });
+}
+
+// ===== SCENE ANIMATIONS =====
+async function runSceneAnimation(index) {
+  switch(index) {
+    case 0: await animateIntro(); break;
+    case 1: await animateAct1(); break;
+    case 2: await animateAct2(); break;
+    case 3: await animateAct3(); break;
+    case 4: await animateOutro(); break;
+  }
+}
+
+async function animateIntro() {
+  // Logo animation is CSS-based, just wait
+  await delay(2500);
+  if (isPlaying) { switchScene(1); runSceneAnimation(1); }
+}
+
+async function animateAct1() {
+  const label = document.getElementById('act1Label');
+  const counter = document.getElementById('counterSection');
+  const map = document.getElementById('bubbleMap');
+  const filterMsg = document.getElementById('filterMsg');
+  const ss = document.getElementById('ss1');
+
+  // Reset
+  document.getElementById('act1').classList.remove('graphics-dim');
+  ss.classList.remove('visible', 'fade-back');
+  label.style.transition = 'opacity 0.6s ease';
+  label.style.opacity = '0';
+  counter.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+  counter.style.opacity = '0';
+  counter.style.transform = 'translateY(20px)';
+  map.style.transition = 'opacity 1s ease';
+  map.style.opacity = '0';
+  filterMsg.style.transition = 'opacity 0.8s ease';
+  filterMsg.style.opacity = '0';
+
+  await delay(300);
+
+  // Label in
+  label.style.opacity = '1';
+  await delay(400);
+
+  // Counter in
+  counter.style.opacity = '1';
+  counter.style.transform = 'translateY(0)';
+  animateCounter(76, 3500);
+  await delay(3800);
+
+  // Bubble map in
+  map.style.opacity = '1';
+  await delay(200);
+
+  // Bubbles pop in
+  const allBubbles = map.querySelectorAll('.bubble');
+  allBubbles.forEach((b, i) => {
+    setTimeout(() => {
+      b.style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      b.style.opacity = '1';
+      b.style.transform = 'scale(1)';
+    }, i * 50);
+  });
+  await delay(bubbles.length * 50 + 600);
+
+  // Cluster labels fade in
+  map.querySelectorAll('.cluster-label').forEach((lbl, i) => {
+    setTimeout(() => {
+      lbl.style.transition = 'opacity 0.6s ease';
+      lbl.style.opacity = '1';
+    }, i * 150);
+  });
+  await delay(1200);
+
+  // Filter message
+  filterMsg.style.opacity = '1';
+  await delay(1500);
+
+  // Screenshot reveals over graphics — "실제로는 이렇게 보입니다"
+  document.getElementById('act1').classList.add('graphics-dim');
+  ss.classList.add('visible');
+  await delay(2500);
+
+  // Smooth fade out before scene change
+  ss.classList.remove('visible');
+  document.getElementById('act1').classList.remove('graphics-dim');
+  await delay(1000);
+
+  if (isPlaying) { switchScene(2); runSceneAnimation(2); }
+}
+
+async function animateAct2() {
+  const label = document.getElementById('act2Label');
+  const orchMsg = document.getElementById('orchMsg');
+  const runBtnEl = document.getElementById('runBtn');
+  const ss = document.getElementById('ss2');
+  const totalNodes = pipelineNodes.length;
+  const totalEdges = edgeDefs.length;
+
+  // ---- RESET ----
+  document.getElementById('act2').classList.remove('graphics-dim');
+  ss.classList.remove('visible', 'fade-back');
+  label.style.transition = 'opacity 0.6s ease';
+  label.style.opacity = '0';
+  orchMsg.style.opacity = '0';
+  runBtnEl.style.opacity = '0';
+  runBtnEl.style.transform = 'translateY(10px)';
+
+  for (let i = 0; i < totalNodes; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.style.transition = 'none';
+    node.style.opacity = '0';
+    node.style.transform = 'translateY(20px) scale(0.95)';
+    node.classList.remove('active-node', 'done-node');
+    const status = node.querySelector('.node-status');
+    status.className = 'node-status';
+    status.textContent = '';
+    node.querySelectorAll('.conn-dot').forEach(d => d.classList.remove('active'));
+  }
+  // Clear old edges
+  pipelineSvg.innerHTML = '';
+
+  await delay(300);
+
+  // ---- LABEL ----
+  label.style.opacity = '1';
+  await delay(500);
+
+  const leftMidEdgeCount = edgeDefs.filter(e => e.to < RIGHT_IDX).length;  // left→mid edges
+  const midRightEdgeCount = edgeDefs.length - leftMidEdgeCount;            // mid→right edges
+
+  // ---- LEFT COLUMN NODES (stagger from top, gentle) ----
+  for (let i = 0; i < LEFT_COUNT; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+    node.style.opacity = '1';
+    node.style.transform = 'translateY(0) scale(1)';
+    await delay(180);
+  }
+  await delay(300);
+
+  // Build edges — temporarily show mid/right nodes to measure, then hide
+  for (let i = LEFT_COUNT; i < totalNodes; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.style.transition = 'none';
+    node.style.opacity = '0';
+    node.style.transform = 'translateY(0) scale(1)';
+  }
+  await delay(50);
+  buildEdges();
+  for (let i = LEFT_COUNT; i < totalNodes; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.style.transform = 'translateY(20px) scale(0.95)';
+  }
+  await delay(200);
+
+  // ---- LEFT → MIDDLE EDGES (draw + show middle nodes) ----
+  for (let i = 0; i < leftMidEdgeCount; i++) {
+    const bg = document.getElementById(`edge-bg-${i}`);
+    bg.style.transition = 'opacity 0.8s ease';
+    bg.style.opacity = '1';
+  }
+  await delay(400);
+
+  // Show middle nodes with stagger
+  for (let m = 0; m < MID_COUNT; m++) {
+    const midIdx = LEFT_COUNT + m;
+    const node = document.getElementById(`pnode${midIdx}`);
+    node.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+    node.style.opacity = '1';
+    node.style.transform = 'translateY(0) scale(1)';
+    await delay(200);
+  }
+  await delay(400);
+
+  // Draw edges left→mid with flowing dots
+  const drawPromises1 = [];
+  for (let i = 0; i < leftMidEdgeCount; i++) {
+    const glowPath = document.getElementById(`edge-glow-${i}`);
+    const bgPath = document.getElementById(`edge-bg-${i}`);
+    const flowDot = document.getElementById(`flow-dot-${i}`);
+    const p = (async () => {
+      await delay(i * 120);
+      await drawPath(glowPath, 700);
+      const fromNode = document.getElementById(`pnode${edgeDefs[i].from}`);
+      const toNode = document.getElementById(`pnode${edgeDefs[i].to}`);
+      fromNode.querySelector('.conn-dot.right')?.classList.add('active');
+      toNode.querySelector('.conn-dot.left')?.classList.add('active');
+      animateFlowDot(flowDot, bgPath, 800);
+    })();
+    drawPromises1.push(p);
+  }
+  await Promise.all(drawPromises1);
+  await delay(600);
+
+  // ---- MIDDLE → RIGHT EDGES + ABDEV NODE ----
+  const abdev = document.getElementById(`pnode${RIGHT_IDX}`);
+  abdev.style.transition = 'opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+  abdev.style.opacity = '1';
+  abdev.style.transform = 'translateY(0) scale(1)';
+  await delay(500);
+
+  for (let i = leftMidEdgeCount; i < edgeDefs.length; i++) {
+    const bg = document.getElementById(`edge-bg-${i}`);
+    bg.style.transition = 'opacity 0.8s ease';
+    bg.style.opacity = '1';
+  }
+  await delay(300);
+
+  const drawPromises2 = [];
+  for (let i = leftMidEdgeCount; i < edgeDefs.length; i++) {
+    const glowPath = document.getElementById(`edge-glow-${i}`);
+    const bgPath = document.getElementById(`edge-bg-${i}`);
+    const flowDot = document.getElementById(`flow-dot-${i}`);
+    const p = (async () => {
+      await delay((i - leftMidEdgeCount) * 150);
+      await drawPath(glowPath, 750);
+      const fromNode = document.getElementById(`pnode${edgeDefs[i].from}`);
+      const toNode = document.getElementById(`pnode${edgeDefs[i].to}`);
+      fromNode.querySelector('.conn-dot.right')?.classList.add('active');
+      toNode.querySelector('.conn-dot.left')?.classList.add('active');
+      animateFlowDot(flowDot, bgPath, 800);
+    })();
+    drawPromises2.push(p);
+  }
+  await Promise.all(drawPromises2);
+  await delay(700);
+
+  // ---- RUN BUTTON ----
+  runBtnEl.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  runBtnEl.style.opacity = '1';
+  runBtnEl.style.transform = 'translateY(0)';
+  await delay(900);
+
+  runBtnEl.style.transform = 'scale(0.96)';
+  await delay(150);
+  runBtnEl.style.transform = 'scale(1)';
+  await delay(500);
+
+  // ---- PIPELINE RUN: nodes light up column by column ----
+  // Left column activates
+  for (let i = 0; i < LEFT_COUNT; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.classList.add('active-node');
+    await delay(120);
+  }
+  await delay(600);
+  // Left done
+  for (let i = 0; i < LEFT_COUNT; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.classList.remove('active-node');
+    node.classList.add('done-node');
+    const status = node.querySelector('.node-status');
+    status.textContent = '\u2713';
+    status.style.color = '#4CAF50';
+    status.classList.add('visible');
+    await delay(100);
+  }
+  await delay(300);
+
+  // Flow dots left→mid
+  const flowBatch1 = [];
+  for (let i = 0; i < leftMidEdgeCount; i++) {
+    const bgPath = document.getElementById(`edge-bg-${i}`);
+    const flowDot = document.getElementById(`flow-dot-${i}`);
+    flowBatch1.push(animateFlowDot(flowDot, bgPath, 700 + i * 30));
+  }
+  await delay(500);
+
+  // Middle column activates
+  for (let i = LEFT_COUNT; i < LEFT_COUNT + MID_COUNT; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.classList.add('active-node');
+    await delay(150);
+  }
+  await Promise.all(flowBatch1);
+  // Turn left→mid edges green
+  for (let i = 0; i < leftMidEdgeCount; i++) {
+    turnEdgeGreen(i);
+  }
+  await delay(500);
+  // Middle done
+  for (let i = LEFT_COUNT; i < LEFT_COUNT + MID_COUNT; i++) {
+    const node = document.getElementById(`pnode${i}`);
+    node.classList.remove('active-node');
+    node.classList.add('done-node');
+    const status = node.querySelector('.node-status');
+    status.textContent = '\u2713';
+    status.style.color = '#4CAF50';
+    status.classList.add('visible');
+    await delay(120);
+  }
+  await delay(300);
+
+  // Flow dots mid→right
+  const flowBatch2 = [];
+  for (let i = leftMidEdgeCount; i < edgeDefs.length; i++) {
+    const bgPath = document.getElementById(`edge-bg-${i}`);
+    const flowDot = document.getElementById(`flow-dot-${i}`);
+    flowBatch2.push(animateFlowDot(flowDot, bgPath, 750));
+  }
+  await delay(400);
+
+  // AbDev activates
+  abdev.classList.add('active-node');
+  await Promise.all(flowBatch2);
+  // Turn mid→right edges green
+  for (let i = leftMidEdgeCount; i < edgeDefs.length; i++) {
+    turnEdgeGreen(i);
+  }
+  await delay(700);
+  abdev.classList.remove('active-node');
+  abdev.classList.add('done-node');
+  const abdevStatus = abdev.querySelector('.node-status');
+  abdevStatus.textContent = '\u2713';
+  abdevStatus.style.color = '#4CAF50';
+  abdevStatus.classList.add('visible');
+
+  await delay(600);
+
+  // ---- MESSAGE ----
+  orchMsg.style.opacity = '1';
+  await delay(1500);
+
+  // ---- SCREENSHOT reveals — "실제로는 이렇게 보입니다" ----
+  document.getElementById('act2').classList.add('graphics-dim');
+  ss.classList.add('visible');
+  await delay(2500);
+
+  // Smooth fade out before scene change
+  ss.classList.remove('visible');
+  document.getElementById('act2').classList.remove('graphics-dim');
+  await delay(1000);
+
+  if (isPlaying) { switchScene(3); runSceneAnimation(3); }
+}
+
+async function animateAct3() {
+  const label = document.getElementById('act3Label');
+  const seqPanel = document.getElementById('seqPanel');
+  const chatPanel = document.getElementById('chatPanel');
+  const seqText = document.getElementById('seqText');
+  const protein3d = document.getElementById('protein3d');
+  const ss = document.getElementById('ss3');
+
+  // Reset
+  document.getElementById('act3').classList.remove('graphics-dim');
+  ss.classList.remove('visible', 'fade-back');
+  label.style.transition = 'opacity 0.6s ease';
+  label.style.opacity = '0';
+  seqPanel.style.transition = 'none';
+  seqPanel.style.opacity = '0';
+  seqPanel.style.transform = 'translateX(-30px)';
+  chatPanel.style.transition = 'none';
+  chatPanel.style.opacity = '0';
+  chatPanel.style.transform = 'translateY(40px) scale(0.95)';
+  seqText.textContent = '';
+  document.getElementById('chatBody').innerHTML = '';
+  document.getElementById('field1').textContent = '';
+  document.getElementById('field2').textContent = '';
+  document.getElementById('field3').textContent = '';
+  document.getElementById('field1').classList.remove('glow');
+  document.getElementById('field2').classList.remove('glow');
+  document.getElementById('field3').classList.remove('glow');
+  protein3d.classList.remove('visible');
+
+  await delay(300);
+
+  // Label
+  label.style.opacity = '1';
+  await delay(400);
+
+  // Sequence panel slides in
+  seqPanel.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+  seqPanel.style.opacity = '1';
+  seqPanel.style.transform = 'translateX(0)';
+  await delay(500);
+
+  // Chat panel slides up
+  chatPanel.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  chatPanel.style.opacity = '1';
+  chatPanel.style.transform = 'translateY(0) scale(1)';
+  await delay(600);
+
+  // User message — advanced question
+  await addChatMsg(true, 'Can BioEmu predict destabilizing mutations or folding defects?');
+  await delay(800);
+
+  // AI response
+  await addChatMsg(false, 'BioEmu generates diverse thermodynamic equilibrium conformations. While it provides structural insights, for mutation impact analysis I recommend combining it with stability prediction tools.');
+  await delay(600);
+
+  // Auto-type sequence
+  await typeText(seqText, 'SQWSVDDVITWCISTLEVEETDPLCQRLRENDIVGDLL', 30);
+  await delay(400);
+
+  // AI suggests workflow
+  await addChatMsg(false, 'Setting up a combined workflow: BioEmu → structural ensemble → stability scoring. Configuring optimal parameters...');
+  await delay(400);
+
+  const fields = [
+    { id: 'field1', val: 'BioEMU-v2 (recommended)' },
+    { id: 'field2', val: '250 conformations' },
+    { id: 'field3', val: '0.85' },
+  ];
+
+  for (const f of fields) {
+    const el = document.getElementById(f.id);
+    el.classList.add('glow');
+    await typeText(el, f.val, 20);
+    await delay(300);
+    el.classList.remove('glow');
+  }
+
+  await delay(500);
+
+  // Show 3D structure
+  await addChatMsg(false, 'Ensemble generation complete. 3 destabilizing regions identified — see structural overlay.');
+  protein3d.classList.add('visible');
+  await delay(1500);
+
+  // Screenshot reveals — "실제로는 이렇게 보입니다"
+  document.getElementById('act3').classList.add('graphics-dim');
+  ss.classList.add('visible');
+  await delay(2500);
+
+  // Smooth fade out before scene change
+  ss.classList.remove('visible');
+  document.getElementById('act3').classList.remove('graphics-dim');
+  await delay(1000);
+
+  if (isPlaying) { switchScene(4); runSceneAnimation(4); }
+}
+
+async function animateOutro() {
+  const step1 = document.getElementById('outStep1');
+  const step2 = document.getElementById('outStep2');
+  const step3 = document.getElementById('outStep3');
+  const arrow1 = document.getElementById('outArrow1');
+  const arrow2 = document.getElementById('outArrow2');
+  const logo = document.getElementById('outroLogo');
+  const cta = document.getElementById('outroCta');
+  const summary = document.querySelector('.steps-summary');
+
+  // Reset
+  summary.classList.remove('shrink');
+  [step1, step2, step3].forEach(s => {
+    s.style.transition = 'none';
+    s.style.opacity = '0';
+    s.style.transform = 'translateY(30px)';
+    s.querySelector('.icon-circle').classList.remove('glow');
+  });
+  [arrow1, arrow2].forEach(a => {
+    a.style.transition = 'none';
+    a.style.opacity = '0';
+  });
+  logo.classList.remove('visible');
+  logo.style.transition = 'none';
+  logo.style.opacity = '0';
+  logo.style.transform = 'scale(0.8)';
+  cta.style.transition = 'none';
+  cta.style.opacity = '0';
+
+  await delay(400);
+
+  // Steps pop in with glow
+  const steps = [step1, step2, step3];
+  const arrows = [arrow1, arrow2];
+
+  for (let i = 0; i < 3; i++) {
+    steps[i].style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    steps[i].style.opacity = '1';
+    steps[i].style.transform = 'translateY(0)';
+    steps[i].querySelector('.icon-circle').classList.add('glow');
+    await delay(350);
+    if (i < 2) {
+      arrows[i].style.transition = 'opacity 0.4s ease';
+      arrows[i].style.opacity = '1';
+      await delay(200);
+    }
+  }
+
+  // Hold on the big circles
+  await delay(1500);
+
+  // Shrink steps, bring in logo big
+  summary.classList.add('shrink');
+  await delay(600);
+
+  // Logo scales in dominantly
+  logo.style.transition = 'opacity 1.2s ease, transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  logo.style.opacity = '1';
+  logo.style.transform = 'scale(1)';
+  await delay(800);
+
+  // CTA
+  cta.style.transition = 'opacity 0.8s ease';
+  cta.style.opacity = '1';
+  await delay(3000);
+
+  // Loop: restart from beginning
+  if (isPlaying) {
+    switchScene(0);
+    const introLogo = document.querySelector('#intro .logo');
+    const introSub = document.querySelector('#intro .subtitle');
+    if (introLogo && introSub) {
+      introLogo.style.animation = 'none';
+      introSub.style.animation = 'none';
+      requestAnimationFrame(() => {
+        introLogo.style.animation = '';
+        introSub.style.animation = '';
+        runSceneAnimation(0);
+      });
+    } else {
+      runSceneAnimation(0);
+    }
+  }
+}
+
+// ===== UTILITY =====
+function delay(ms) {
+  return new Promise(resolve => {
+    timeline = setTimeout(resolve, ms);
+  });
+}
+
+// ===== CLICK TO TOGGLE PLAY/PAUSE =====
+const pauseIndicator = document.getElementById('pauseIndicator');
+let pauseTimeout;
+
+function showPauseIndicator(icon) {
+  // icon: 'pause' or 'play'
+  if (icon === 'play') {
+    pauseIndicator.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="white"/></svg>';
+  } else {
+    pauseIndicator.innerHTML = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/></svg>';
+  }
+  pauseIndicator.classList.add('show');
+  clearTimeout(pauseTimeout);
+  pauseTimeout = setTimeout(() => pauseIndicator.classList.remove('show'), 600);
+}
+
+function togglePlayPause() {
+  if (isPlaying) {
+    isPlaying = false;
+    clearTimeout(timeline);
+    showPauseIndicator('pause');
+  } else {
+    isPlaying = true;
+    showPauseIndicator('play');
+    runSceneAnimation(currentScene);
+  }
+}
+
+document.getElementById('clickOverlay').addEventListener('click', togglePlayPause);
+
+// ===== PROGRESS BAR DRAG =====
+const progressTrack = document.getElementById('progressTrack');
+let isDragging = false;
+
+function scrubToPosition(clientX) {
+  const rect = progressTrack.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const targetScene = Math.round(pct * (scenes.length - 1));
+  if (isPlaying) { clearTimeout(timeline); isPlaying = false; }
+  switchScene(targetScene);
+  runSceneAnimation(targetScene);
+}
+
+progressTrack.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  scrubToPosition(e.clientX);
+});
+document.addEventListener('mousemove', (e) => {
+  if (isDragging) scrubToPosition(e.clientX);
+});
+document.addEventListener('mouseup', () => { isDragging = false; });
+
+// Touch support
+progressTrack.addEventListener('touchstart', (e) => {
+  isDragging = true;
+  scrubToPosition(e.touches[0].clientX);
+}, { passive: true });
+document.addEventListener('touchmove', (e) => {
+  if (isDragging) scrubToPosition(e.touches[0].clientX);
+}, { passive: true });
+document.addEventListener('touchend', () => { isDragging = false; });
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' && currentScene < scenes.length - 1) {
+    if (isPlaying) { clearTimeout(timeline); }
+    switchScene(currentScene + 1);
+    runSceneAnimation(currentScene);
+  }
+  if (e.key === 'ArrowLeft' && currentScene > 0) {
+    if (isPlaying) { clearTimeout(timeline); }
+    switchScene(currentScene - 1);
+    runSceneAnimation(currentScene);
+  }
+  if (e.key === ' ') {
+    e.preventDefault();
+    togglePlayPause();
+  }
+});
+
+// ===== POSTMESSAGE API (for parent page control) =====
+window.addEventListener('message', (e) => {
+  if (e.data === 'play') {
+    isPlaying = true;
+    switchScene(0);
+    // Reset intro animations
+    const logo = document.querySelector('#intro .logo');
+    const sub = document.querySelector('#intro .subtitle');
+    if (logo && sub) {
+      logo.style.animation = 'none';
+      sub.style.animation = 'none';
+      requestAnimationFrame(() => {
+        logo.style.animation = '';
+        sub.style.animation = '';
+        runSceneAnimation(0);
+      });
+    } else {
+      runSceneAnimation(0);
+    }
+  } else if (e.data === 'pause') {
+    isPlaying = false;
+    clearTimeout(timeline);
+  } else if (e.data === 'resume') {
+    if (!isPlaying) {
+      isPlaying = true;
+      runSceneAnimation(currentScene);
+    }
+  }
+});
+
+// ===== DO NOT AUTO-START (wait for parent postMessage) =====
+isPlaying = false;
+</script>
+</body>
+</html>
